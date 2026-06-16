@@ -10,6 +10,8 @@ export interface FilterChecboxProps {
   name?: string;
 }
 
+
+
 export const FilterCheckbox: React.FC<FilterChecboxProps> = ({
   text,
   value,
@@ -18,6 +20,7 @@ export const FilterCheckbox: React.FC<FilterChecboxProps> = ({
   checked,
   name,
 }) => {
+  
   return (
     <div className="flex items-center space-x-2">
       <Checkbox

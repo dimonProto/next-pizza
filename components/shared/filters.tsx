@@ -1,86 +1,129 @@
-import React from "react";
+"use client";
+import React, { use, useEffect } from "react";
 import { Title } from "./title";
-import { FilterCheckbox } from "./filter-checkbox";
 import { Input } from "../ui";
 import { RangeSlider } from "./range-slider";
 import { CheckboxFilterGroup } from "./checkbox-filter-group";
-
+import { useFilterIngredients } from "@/hooks/useFilterIngredients";
+import { useSet } from "react-use";
 
 interface Props {
   className?: string;
 }
 
+interface PriceProps {
+  priceFrom: number;
+  priceTo: number;
+}
+
 export const Filters: React.FC<Props> = ({ className }) => {
+  const { ingredients, loading, selectedIngredients, onAddId } =
+    useFilterIngredients();
+
+  const [sizes, { toggle: toggleSizes }] = useSet(new Set<string>([]));
+  const [pizzaTypes, { toggle: togglePizzaTypes }] = useSet(
+    new Set<string>([]),
+  );
+
+  const [price, setPrice] = React.useState<PriceProps>({
+    priceFrom: 0,
+    priceTo: 1000,
+  });
+
+  const partIngredients = ingredients?.map((item) => ({
+    text: item.name,
+    value: String(item.id),
+  }));
+
+  const openPartFilters = 6;
+
+  const updatePrice = (name: keyof PriceProps, value: string) => {
+    setPrice({
+      ...price,
+      [name]: Number(value),
+    });
+  };
+
+  useEffect(() => {
+    const filters = {
+      ...price,
+      pizzaTypes: [...pizzaTypes],
+      sizes: [...sizes],
+      ingredients: [...selectedIngredients],
+    };
+  }, [price, pizzaTypes, sizes, selectedIngredients]);
+
   return (
     <div className={className}>
       <Title text="Фільтрація" size="sm" className="mb-5 font-bold" />
-      <div className="flex flex-col gap-4">
-        <FilterCheckbox text="Можна збирати" value="1" />
-        <FilterCheckbox text="Новинки" value="2" />
-      </div>
+
+      <CheckboxFilterGroup
+        title="Тип тіста"
+        name="pizzaTypes"
+        className="mt-5"
+        onClickCheckbox={togglePizzaTypes}
+        selectedIds={pizzaTypes}
+        items={[
+          { text: "Тонке", value: "1" },
+          { text: "Традиційне", value: "2" },
+        ]}
+      />
+
+      <CheckboxFilterGroup
+        title="Розміри"
+        name="sizes"
+        className="mt-5"
+        onClickCheckbox={toggleSizes}
+        selectedIds={sizes}
+        items={[
+          { text: "20 см", value: "20" },
+          { text: "30 см", value: "30" },
+          { text: "40 см", value: "40" },
+        ]}
+      />
 
       <div className="mt-5 border-y border-y-neutral-100 py-6 pb-7">
         <p className="font-bold mb-3">Ціна від і до </p>
         <div className="flex gap-3 mb-5">
-          <Input type="number" placeholder="0" min={0} max={1000} />
-          <Input type="number" min={100} max={1000} placeholder="1000" />
+          <Input
+            type="number"
+            placeholder="0"
+            min={0}
+            max={1000}
+            value={String(price.priceFrom)}
+            onChange={(e) => updatePrice("priceFrom", e.target.value)}
+          />
+          <Input
+            type="number"
+            min={100}
+            max={1000}
+            placeholder="1000"
+            value={String(price.priceTo)}
+            onChange={(e) => updatePrice("priceTo", e.target.value)}
+          />
         </div>
-        <RangeSlider min={0} max={1000} step={10} />
+        <RangeSlider
+          min={0}
+          max={1000}
+          step={10}
+          value={[price.priceFrom, price.priceTo]}
+          onValueChange={([priceFrom, priceTo]) =>
+            setPrice({ priceFrom, priceTo })
+          }
+        />
       </div>
 
-      <CheckboxFilterGroup title="Інгредієнти" className="mt-5" limit={5}
-      defaultItems={[
-        {
-          text:'Сирний соус',
-          value:'1'
-        },
-          {
-          text:'Моцарела',
-          value:'2'
-        },
-          {
-          text:'Часничний соус',
-          value:'3'
-        },
-          {
-          text:'Солоні огірки',
-          value:'4'
-        },
-          {
-          text:'Фіолева цибуля',
-          value:'5'
-        },
-         {
-          text:'Томати',
-          value:'6'
-        },
-      ]}
-      items={[
-        {
-          text:'Сирний соус',
-          value:'1'
-        },
-          {
-          text:'Моцарела',
-          value:'2'
-        },
-          {
-          text:'Часничний соус',
-          value:'3'
-        },
-          {
-          text:'Солоні огірки',
-          value:'4'
-        },
-          {
-          text:'Фіолева цибуля',
-          value:'5'
-        },
-         {
-          text:'Томати',
-          value:'6'
-        },
-      ]} />
+      <CheckboxFilterGroup
+        title="Інгредієнти"
+        name="ingredients"
+        className="mt-5"
+        limit={openPartFilters}
+        defaultItems={partIngredients.slice(0, openPartFilters)}
+        items={partIngredients}
+        loading={loading}
+        onClickCheckbox={onAddId}
+        selectedIds={selectedIngredients}
+      />
     </div>
   );
 };
