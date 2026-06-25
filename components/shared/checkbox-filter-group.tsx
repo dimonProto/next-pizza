@@ -44,6 +44,7 @@ export const CheckboxFilterGroup: React.FC<Props> = ({
   const onChangeSerchInput = (value: string) => {
     setSerchValue(value);
   };
+  
 
   if (loading) {
     return (
